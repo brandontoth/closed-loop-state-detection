@@ -1,0 +1,54 @@
+function main_loop(src, event)
+
+try
+    params = src.params; %src.params does not exist, get params from UserData
+    shared = src.UserData;
+
+    eeg = event.Data(:, 1);
+    emg = event.Data(:, 2);
+        
+    % Apply filters
+    filt_eeg = filtfilt(params.b_eeg,  params.a_eeg,  eeg);
+    filt_emg = filtfilt(params.b_comb, params.a_comb, emg);
+
+    % Compute power and RMS
+    [pxx, f]  = pwelch(filt_eeg, hanning(params.buffer), params.buffer / 2, params.buffer, params.fs);
+    delta_idx = f >= params.delta_frq(1) & f <= params.delta_frq(2);
+    delta     = trapz(f(delta_idx), pxx(delta_idx));
+    emg_r     = rms  (filt_emg);
+
+    % Update detection window
+    is_nrem = delta > shared.delta_thresh && emg_r < shared.emg_thresh;
+    shared.win = [shared.win(2:end), is_nrem];
+
+    % If 3 of 5 epochs -> trigger TTL
+    if sum(shared.win) >= 3
+        write(src, 5, "OutputSingleScan");
+        pause(params.ttl_dur);
+        write(src, 0, "OutputSingleScan");
+        shared.ttl = [shared.ttl; ones(params.fs * params.ttl_dur, 1)];
+        shared.win(:) = false;
+    else
+        shared.ttl = [shared.ttl; zeros(params.fs, 1)];
+    end
+
+    % Progress
+    shared.epoch_counter = shared.epoch_counter + 1;
+    if mod(shared.epoch_counter, 10) == 0
+        disp("Epochs processed: " + shared.epoch_counter);
+    end
+
+    % Store
+    shared.eeg_data  = [shared.eeg_data; eeg];
+    shared.emg_data  = [shared.emg_data; emg];
+    shared.delta     = [shared.delta;    delta];
+    shared.emg_rms   = [shared.emg_rms;  emg_r];
+
+    % Update shared state
+    src.UserData = shared;
+catch ME
+    disp('Error in main_loop:')
+    disp(ME.message)
+end
+
+end

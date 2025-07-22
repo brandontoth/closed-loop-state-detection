@@ -3,33 +3,37 @@ function params = get_params()
     params.daq_id = 'Dev1'; % define DAQ
     params.ttl_id = 'ao0';  % output channel
     
-    params.fs = 1000;       % acquisition frequency
+    params.fs  = 1000;          % acquisition frequency
     params.nyq = params.fs / 2; % nyquist
-    params.aq_dur = 1;      % data chunk duration
-    params.epoch  = 5;      % epoch len
-    % number of points in a data chunk
-    params.buffer = round(params.fs * params.aq_dur);
+    params.aq_dur = 1;          % data chunk duration
+    params.epoch  = 5;          % epoch len
+    params.buffer = round(params.fs * params.aq_dur); % number of points in a data chunk
     
     params.delta_frq = [0.5, 4]; % delta window
     params.theta_frq = [5, 10];  % theta window
-    params.eeg_low = 0.5;        % eeg low cutoff
-    params.eeg_high = 40;        % eeg high cutoff
-    params.emg_low = 30;         % emg low cutoff
-    params.emg_high = 100;       % emg high cutoff
+    params.eeg_low   = 0.5;      % eeg low cutoff
+    params.eeg_high  = 40;       % eeg high cutoff
+    params.emg_low   = 30;       % emg low cutoff
+    params.emg_high  = 100;      % emg high cutoff
     params.ord = 4;              % butter filter order
     
-    params.ttl_dur = 0.1;  % ttl duration in s    
-    params.vis = false;    % visualization bool
+    params.ttl_dur = 0.1;   % ttl duration in s    
+    params.vis     = false; % visualization bool
     
-    params.ord_comb = 50;  % comb filter order
-    params.fo = 60;        % comb frq
-    params.q = 35;         % comb quality factor
-    % comb filter bandwidth
-    params.bw = (params.fo / params.nyq) / params.q;
+    params.ord_comb = 50;   % comb filter order
+    params.fo = 60;         % comb frq
+    params.q  = 35;         % comb quality factor
+    params.bw = (params.fo / params.nyq) / params.q; % comb filter bandwidth
     
     params.moving_average_window = 5; % analysis window
 
+    %% create filters
+    [params.b_eeg,  params.a_eeg]  = butter(params.ord, [params.eeg_low, params.eeg_high] / params.nyq, 'bandpass');
+    [params.b_emg,  params.a_emg]  = butter(params.ord, [params.emg_low, params.emg_high] / params.nyq, 'bandpass');
+    [params.b_comb, params.a_comb] = iircomb(params.ord_comb, params.bw, 'notch');
+
     %% user defined settings
+    % maybe incorporate this into a GUI at some point...
     name   = inputdlg('Input session name:', 'Input', [1 50]);
     time   = inputdlg('Input session length (h): ', 'Input', [1 50]);
     delay  = inputdlg('Input session start delay (h): ', 'Input', [1 50]);

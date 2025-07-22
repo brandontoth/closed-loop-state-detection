@@ -1,0 +1,63 @@
+function realtime_nrem_detection()
+% REALTIME_NREM_DETECTION
+% Real-time EEG + EMG analysis and TTL pulse output for NREM detection
+% Requires: MATLAB Data Acquisition Toolbox, NI device
+clear, clc, close all
+
+%% --- Configuration Parameters ---
+params = get_params();
+
+%% --- Setup DAQ ---
+s = setup_daq(params); % this is what sets off main_loop
+% scansAvailableFcn is assigned to teh correct main_loop function & knows
+% it
+
+%% shared variables with UserData
+shared = struct( ...
+    'delta_thresh', [], ...
+    'emg_thresh',   [], ...
+    'win', false(1, 5), ...
+    'nrem_log',     [], ...
+    'eeg_data',     [], ...
+    'emg_data',     [], ...
+    'delta',        [], ...
+    'emg_rms',      [], ...
+    'ttl',          [], ...
+    'epoch_counter', 0, ...
+    'params', params);
+
+s.UserData = shared;
+
+%% --- Visualization Setup ---
+if params.vis
+    [params.fig_handle, params.eeg_line, params.psd_line, params.emg_line] = setup_vis(params);
+end
+
+%% --- Calibration Period ---
+% fprintf('Calibrating thresholds using 60 seconds of baseline data...\n');
+% [delta_thresh, emg_thresh] = calibrate_session(s, params);
+params.delta_thresh = 0.007;
+params.emg_thresh = 0.08;
+
+%% --- Main Loop ---
+fprintf('-- Starting acquisition. -- \n')
+
+try
+   start(s, "continuous"); % eveyrthing in main_loop is fine
+catch
+    disp(ME.message);
+end
+
+pause(5);
+disp(s.Running);
+pause(5);
+stop(s);
+%% -- Save everything
+shared = s.UserData;
+
+filename = [params.session_name, '_', datestr(now,'yyyymmdd_HHMMSS'), '.mat'];
+save(filename, 'shared', 'params')
+
+fprintf('-- Finished. -- \n')
+
+end
