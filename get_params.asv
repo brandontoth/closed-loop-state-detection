@@ -10,30 +10,34 @@ function params = get_params()
     default_delay = '0';
     default_fs    = '1000';
     default_name  = 'session';
+    default_id    = 'mouse_id';
     params.calibration_folder = '';
 
     % Labels and Fields
-    uilabel(fig, 'Position', [20 340 100 22], 'Text', 'Session name:');
-    name_field = uieditfield(fig, 'text', 'Position', [150 340 200 22], 'Value', default_name);
+    uilabel(fig, 'Position', [20 340 100 22], 'Text', 'Mouse ID (s):');
+    id_field = uieditfield(fig, 'text', 'Position', [150 340 200 22], 'Value', default_id);
+
+    uilabel(fig, 'Position', [20 300 100 22], 'Text', 'Session name:');
+    name_field = uieditfield(fig, 'text', 'Position', [150 300 200 22], 'Value', default_name);
     
-    uilabel(fig, 'Position', [20 300 120 22], 'Text', 'Sampling rate (Hz):');
-    fs_field = uieditfield(fig, 'text', 'Position', [150 300 200 22], 'Value', default_fs);
+    uilabel(fig, 'Position', [20 260 120 22], 'Text', 'Sampling rate (Hz):');
+    fs_field = uieditfield(fig, 'text', 'Position', [150 260 200 22], 'Value', default_fs);
     
-    uilabel(fig, 'Position', [20 260 120 22], 'Text', 'Session length (h):');
-    time_field = uieditfield(fig, 'text', 'Position', [150 260 200 22], 'Value', default_time);
+    uilabel(fig, 'Position', [20 220 120 22], 'Text', 'Session length (h):');
+    time_field = uieditfield(fig, 'text', 'Position', [150 220 200 22], 'Value', default_time);
     
-    uilabel(fig, 'Position', [20 220 120 22], 'Text', 'Start delay (h):');
-    delay_field = uieditfield(fig, 'text', 'Position', [150 220 200 22], 'Value', default_delay);
+    uilabel(fig, 'Position', [20 180 120 22], 'Text', 'Start delay (h):');
+    delay_field = uieditfield(fig, 'text', 'Position', [150 180 200 22], 'Value', default_delay);
     
-    uilabel(fig, 'Position', [20 180 120 22], 'Text', 'Output terminal ID:');
+    uilabel(fig, 'Position', [20 140 120 22], 'Text', 'Output terminal ID:');
     ttl_field = uidropdown(fig, ...
         'Items', {'ao0','ao1'}, ...
-        'Position', [150 180 200 22]);
+        'Position', [150 140 200 22]);
     
-    uilabel(fig, 'Position', [20 140 120 22], 'Text', 'Box ID (1-4):');
+    uilabel(fig, 'Position', [20 100 120 22], 'Text', 'Box ID (1-4):');
     box_field = uidropdown(fig, ...
         'Items', {'1','2','3','4'}, ...
-        'Position', [150 140 200 22]);
+        'Position', [150 100 200 22]);
     
     % Label for showing selected folder path
     path_label = uilabel(fig, ...

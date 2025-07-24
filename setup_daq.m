@@ -7,12 +7,8 @@ function [s_in, s_out] = setup_daq(params)
     s_in.ScansAvailableFcnCount = params.fs;
     s_in.ScansAvailableFcn = @main_loop;
 
-        % --- Calibration Period ---
-    % fprintf('Calibrating thresholds using 60 seconds of baseline data...\n');
-    % [delta_thresh, emg_thresh] = calibrate_session(s_in, params);
-    
-    params.delta_thresh = 0.015;
-    params.emg_thresh   = 0.1;
+    % --- Calibration Period ---
+    params = calibrate_session(params);
 
     % Shared data struct for state storage
     shared = struct( ...

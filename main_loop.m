@@ -19,25 +19,25 @@ function main_loop(src, ~)
         emg_r = rms(filt_emg);
     
         % Update detection window
-        is_nrem = delta > shared.delta_thresh & emg_r < shared.emg_thresh;
+        is_nrem = (delta > shared.delta_thresh) && (emg_r < shared.emg_thresh);
         shared.win = [shared.win(2:end), is_nrem];
-    
+        % disp(sum(shared.win))
+        
+        dur = params.fs * params.ttl_dur;
         % Trigger TTL if criteria met
         if sum(shared.win) >= 3
             % Write TTL pulse via output session
-            write(shared.ttl_session, 5, "OutputSingleScan");
+            write(shared.ttl_session, 5);  
             pause(params.ttl_dur);
-            write(shared.ttl_session, 0, "OutputSingleScan");
-            shared.ttl = [shared.ttl; ones(params.fs * params.ttl_dur, 1)];
+            write(shared.ttl_session, 0);
+            shared.ttl = [shared.ttl; ones(dur, 1); zeros(params.fs - dur, 1)]; 
         else
             shared.ttl = [shared.ttl; zeros(params.fs, 1)];
         end
     
         % Update counters and store data
         shared.epoch_counter = shared.epoch_counter + 1;
-        if mod(shared.epoch_counter, 10) == 0
-            disp("Epochs processed: " + shared.epoch_counter);
-        end
+
         shared.eeg_data = [shared.eeg_data; eeg];
         shared.emg_data = [shared.emg_data; emg];
         shared.delta    = [shared.delta;    delta];
