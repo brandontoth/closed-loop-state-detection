@@ -16,6 +16,7 @@ fprintf('-- Starting acquisition. -- \n')
 start(s_in, "continuous");
 disp("Running: " + s_in.Running);
 pause(params.dur);
+keyboard
 stop(s_in);
 
 %% -- Save data
