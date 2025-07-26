@@ -2,16 +2,24 @@ function main_loop(src, ~)
     try
         shared_all = src.UserData;
         data = read(src, src.ScansAvailableFcnCount, "OutputFormat", "Matrix");
-        
+
+        % update index in case we're not recording each box
+        col_idx = 1;
+
         % iterate across all boxes
         for i = 1:4
+            if ~shared_all(i).params.boxes(i).record
+                continue;
+            end
+
             % pull the data for the current box
             shared = shared_all(i);
             params = shared.params;
 
             % Extract EEG and EMG data for this box
-            eeg  = data(:, (i-1)*2 + 1);
-            emg  = data(:, (i-1)*2 + 2);
+            eeg  = data(:, col_idx);
+            emg  = data(:, col_idx + 1);
+            col_idx = col_idx + 2;
 
             % Filter signals
             filt_eeg = filtfilt(params.b_eeg,  params.a_eeg,  eeg);
@@ -39,7 +47,7 @@ function main_loop(src, ~)
             if ~params.boxes(i).detect
                 shared.ttl = [shared.ttl; zeros(params.fs, 1)];
                 shared_all(i) = shared;
-                continue
+                continue;
             end
 
             % Update detection window
@@ -56,18 +64,18 @@ function main_loop(src, ~)
                 else
                     ttl_val(2) = 5;  % Pulse on ao1
                 end
-                
+
                 % write ttl pulse to output session
                 write(shared.ttl_session, ttl_val);
                 pause(params.ttl_dur);
                 write(shared.ttl_session, [0, 0]);
-                
+
                 % also write to an array for visualization later
                 shared.ttl = [shared.ttl; ones(dur, 1); zeros(params.fs - dur, 1)];
             else
                 shared.ttl = [shared.ttl; zeros(params.fs, 1)];
             end
-            
+
             % write all the data back to the shared file
             shared_all(i) = shared;
         end

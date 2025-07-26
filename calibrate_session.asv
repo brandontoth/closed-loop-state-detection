@@ -6,29 +6,28 @@ function params = calibrate_session(params)
         return;
     end
     
-    % get the file from the calibration folder
+    % get the file fr
     f = dir(calibration_path);
     for i = 1:numel(f)
         if contains(f(i).name, 'mat')
             load([f(i).folder, '\', f(i).name], 'shared');
         end
     end
-    
-    % for each box, check if we need to do a calibration
+
     for i = 1:4
         if ~params.boxes(i).detect
             continue;
         end
 
-        fprintf('-- Calibrating for Box %d --\n', i);
+        fprintf('-- Calibrating for Box %d... --\n', i);
 
         delta   = shared(i).delta;
         emg_rms = shared(i).emg_rms;
 
         % Run k-means on EMG RMS to classify high vs low EMG
         idx   = kmeans(emg_rms, 2);
-        mean1 = mean  (emg_rms(idx == 1));
-        mean2 = mean  (emg_rms(idx == 2));
+        mean1 = mean(emg_rms(idx == 1));
+        mean2 = mean(emg_rms(idx == 2));
 
         % Identify which cluster is high EMG
         if mean1 > mean2

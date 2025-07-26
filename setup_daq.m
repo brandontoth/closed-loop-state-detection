@@ -9,6 +9,10 @@ function [s_in, s_out] = setup_daq(params)
 
     % Shared data struct for state storage per box
     for i = 1:4
+        if ~params.boxes(i).record
+            continue;
+        end
+        
         shared(i) = struct( ...
             'delta_thresh', params.boxes(i).delta_thresh, ...
             'emg_thresh',   params.boxes(i).emg_thresh, ...
@@ -32,9 +36,6 @@ function [s_in, s_out] = setup_daq(params)
         emg_ch.TerminalConfig = 'SingleEnded';
     end
     fprintf('-- Added EEG and EMG input channels for all boxes. -- \n');
-
-    % --- Calibration Period ---
-    params = calibrate_session(params);
 
     % Create output session for TTL pulses
     s_out = daq("ni");

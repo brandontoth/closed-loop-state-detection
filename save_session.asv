@@ -6,7 +6,7 @@ function save_session(params, shared)
     local_folder = 'vlpag_ne';
     local_full   = params.session_name;
     for i = 1:length(params.boxes)
-        local_full = [local_full, '_', params.boxes(i).mouse_id]; %#ok<*AGROW>
+        local_full = [local_full, '_', params.boxes(i).mouse_id];
     end
 
     % build path/file names
@@ -18,15 +18,11 @@ function save_session(params, shared)
 
     % save shared file, ignore warning about acquisition object
     warning('off', 'MATLAB:save:UnableToWriteObject');
-    save([local_save, local_name], 'shared', 'params')
+    save([local_save, local_name], 'shared')
     warning('on',  'MATLAB:save:UnableToWriteObject');
     
     %% save split files to dropbox
     for i = 1:numel(shared)
-        if ~params.boxes(i).record
-            continue;  % Skip boxes that were not set to record
-        end
-
         % build path/file names
         file_name = [params.boxes(i).mouse_id, '_', date];
         file_save = ['C:\Users\batoth\University of Michigan Dropbox\MED-burgesslab\' ...
@@ -43,14 +39,12 @@ function save_session(params, shared)
 
         % create AccuSleep labels file
         labels = zeros(floor(length(EEG) / (params.epoch * params.fs)), 1) + 4;
-        
-        % save everything
+    
         save([file_save, 'EEG_',    file_name], 'EEG');
         save([file_save, 'EMG_',    file_name], 'EMG');
         save([file_save, 'ttl_',    file_name], 'ttl');
         save([file_save, 'labels_', file_name], 'labels');
     end
-    
-    %% yay we're done
+
     clc, fprintf('-- Finished. -- \n')
 end

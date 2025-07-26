@@ -13,11 +13,8 @@ params = get_params();
 %% --- Calibration Period ---
 params = calibrate_session(params);
 
-% pass calibrated params data back into the acquisition object
 for i = 1:numel(params.boxes)
-    s_in.UserData(i).delta_thresh = params.boxes(i).delta_thresh;
-    s_in.UserData(i).emg_thresh   = params.boxes(i).emg_thresh;
-    s_in.UserData(i).params.boxes = params.boxes;
+    s_in.U
 end
 
 %% --- Main Loop Start ---
@@ -25,7 +22,7 @@ fprintf('-- Starting acquisition. -- \n')
 
 start(s_in, "continuous");
 disp("Running: " + s_in.Running);
-pause(params.dur);
+pause(params.dur + 10);
 stop(s_in);
 
 %% -- Save data
