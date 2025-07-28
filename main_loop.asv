@@ -1,6 +1,6 @@
 function main_loop(src, ~)
     try
-        % pass src into shared variable
+        % pass src into shared 
         shared_all = src.UserData;
 
         % Track elapsed time (can just do this based on one box)

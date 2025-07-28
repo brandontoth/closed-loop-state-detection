@@ -3,16 +3,18 @@ function params = get_params()
     params = struct();
 
     %% start user GUI
-    fig = uifigure('Name', 'Session Parameters', 'Position', [100 100 450 620]);
+    fig = uifigure('Name', 'Session Parameters', 'Position', [100 100 500 700]);
 
     % Default values
     default_time  = '0';
     default_delay = '0';
     default_fs    = '1000';
     default_name  = 'session';
+    default_detect_start = '0';
+    default_detect_stop  = '0';
     params.calibration_folder = '';
 
-    y = 570; spacing = 30; field_width = 220; label_width = 120;
+    y = 650; spacing = 30; field_width = 220; label_width = 120;
 
     % Session name
     uilabel(fig, 'Position', [20 y label_width 22], 'Text', 'Session name:');
@@ -32,6 +34,12 @@ function params = get_params()
     y = y - spacing;
     uilabel(fig, 'Position', [20 y label_width 22], 'Text', 'Start delay (h):');
     delay_field = uieditfield(fig, 'text', 'Position', [150 y field_width 22], 'Value', default_delay);
+
+    % Detection window
+    y = y - spacing;
+    uilabel(fig, 'Position', [20 y label_width+60 22], 'Text', 'Detection window (h):');
+    detect_start_field = uieditfield(fig, 'text', 'Position', [150 y field_width/2-5 22], 'Value', default_detect_start);
+    detect_stop_field  = uieditfield(fig, 'text', 'Position', [150 + field_width/2+5, y, field_width/2-5, 22], 'Value', default_detect_stop);
 
     % Mouse IDs
     y = y - spacing*2;
@@ -67,9 +75,9 @@ function params = get_params()
     y = y - spacing*4;
     path_label = uilabel(fig, 'Text', 'No folder selected', ...
         'Position', [20 y+25 360 22], 'FontAngle', 'italic', 'HorizontalAlignment', 'left');
-    folder_btn = uibutton(fig, 'Text', 'Select Folder', 'Position', [60 y-10 100 30], ...
-        'ButtonPushedFcn', @(btn,event) select_folder(path_label)); %#ok<*NASGU>
-    str_btn = uibutton(fig, 'Text', 'Start', 'Position', [200 y-10 100 30], ...
+    folder_btn = uibutton(fig, 'Text', 'Select Folder', 'Position', [100 y-50 120 30], ...
+        'ButtonPushedFcn', @(btn,event) select_folder(path_label)); %#ok<*NASGU> 
+    str_btn = uibutton(fig, 'Text', 'Start', 'Position', [260 y-50 120 30], ...
         'ButtonPushedFcn', @(btn,event) uiresume(fig));
 
     % Store and return params
@@ -82,6 +90,8 @@ function params = get_params()
     params.fs    = str2double(fs_field.Value);
     params.dur   = str2double(time_field.Value)  * 3600;
     params.delay = str2double(delay_field.Value) * 3600;
+    params.detect_start = str2double(detect_start_field.Value) * 3600;
+    params.detect_stop  = str2double(detect_stop_field.Value)  * 3600;
 
     mouse_ids   = {uid1.Value, uid2.Value, uid3.Value, uid4.Value};
     box_vals    = [cb1.Value,  cb2.Value,  cb3.Value,  cb4.Value];
@@ -100,8 +110,6 @@ function params = get_params()
         params.boxes(i).mouse_id = mouse_ids{i};
         params.boxes(i).detect   = ismember(i, detect_boxes);
         params.boxes(i).record   = record_vals(i);
-
-        % just set to 1 as default, this should never trigger a ttl
         params.boxes(i).delta_thresh = 1;
         params.boxes(i).emg_thresh   = 1;
     end
@@ -131,30 +139,5 @@ function params = get_params()
     if params.delay > 0
         fprintf('\n -- Delaying recording for %d hours. -- \n', params.delay / 3600);
         pause(params.delay)
-    end
-end
-
-%% helper function to get the folder for calibration
-function select_folder(path_label)
-    folder = uigetdir;
-    if folder ~= 0
-        fig = path_label.Parent;
-        params = getappdata(fig, 'params');
-        params.calibration_folder = folder;
-        setappdata(fig, 'params', params);
-        truncated = truncate_path(folder, 50);
-        path_label.Text = truncated;
-        figure(fig); drawnow;
-    else
-        disp('Folder selection cancelled.');
-    end
-end
-
-%% helper function to truncate file paths
-function truncated = truncate_path(path_str, max_chars)
-    if strlength(path_str) > max_chars
-        truncated = "..." + extractAfter(path_str, strlength(path_str) - max_chars + 3);
-    else
-        truncated = path_str;
     end
 end
