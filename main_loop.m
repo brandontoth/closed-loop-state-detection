@@ -1,7 +1,7 @@
 function main_loop(src, ~)
     try
         shared_all = src.UserData;
-        data = read(src, src.ScansAvailableFcnCount, "OutputFormat", "Matrix");
+        data = read (src, src.ScansAvailableFcnCount, "OutputFormat", "Matrix");
 
         % update index in case we're not recording each box
         col_idx = 1;
@@ -41,7 +41,6 @@ function main_loop(src, ~)
             shared.emg_data = [shared.emg_data; emg];
             shared.delta    = [shared.delta;    delta];
             shared.emg_rms  = [shared.emg_rms;  emg_r];
-            shared.epoch_counter = shared.epoch_counter + 1;
 
             % Skip detection if not enabled
             if ~params.boxes(i).detect

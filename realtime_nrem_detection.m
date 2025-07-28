@@ -23,9 +23,21 @@ end
 %% --- Main Loop Start ---
 fprintf('-- Starting acquisition. -- \n')
 
+% start continuous background acquisition
 start(s_in, "continuous");
 disp("Running: " + s_in.Running);
-pause(params.dur);
+% pause(params.dur);
+
+% use small pause steps to see if that fixes the 10 s issue
+t0 = tic;
+while toc(t0) < params.dur
+    pause(0.5);
+end
+
+% check the actual recording time
+fprintf('Elapsed time: %.2f sec\n', toc(t0));
+
+% stop session
 stop(s_in);
 
 %% -- Save data

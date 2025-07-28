@@ -30,16 +30,16 @@ function params = calibrate_session(params)
         mean1 = mean  (emg_rms(idx == 1));
         mean2 = mean  (emg_rms(idx == 2));
 
-        % Identify which cluster is high EMG
-        if mean1 > mean2
-            high_emg_idx = (idx == 1);
+        % Identify which cluster is low EMG as a proxy for NREM sleep
+        if mean1 < mean2
+            low_emg_idx = (idx == 1);
         else
-            high_emg_idx = (idx == 2);
+            low_emg_idx = (idx == 2);
         end
 
-        % Calculate calibration thresholds based on high EMG periods
-        emg_thresh   = mean(emg_rms(high_emg_idx)) - std(emg_rms);
-        delta_thresh = mean(delta  (high_emg_idx)) + std(delta);
+        % Calculate calibration thresholds based on low EMG periods
+        emg_thresh   = mean(emg_rms(low_emg_idx)) + std(emg_rms(low_emg_idx)) * 2;
+        delta_thresh = mean(delta  (low_emg_idx));
 
         % Store in params
         params.boxes(i).emg_thresh   = emg_thresh;
@@ -48,6 +48,5 @@ function params = calibrate_session(params)
         fprintf('-- Box %d thresholds: EMG = %.3f, Delta = %.3f --\n', i, emg_thresh, delta_thresh);
     end
 
-    clear shared
     fprintf('-- Calibration complete. --\n');
 end

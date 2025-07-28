@@ -6,6 +6,9 @@ function save_session(params, shared)
     local_folder = 'vlpag_ne';
     local_full   = params.session_name;
     for i = 1:length(params.boxes)
+        if ~params.boxes(i).record
+            continue;  % Skip boxes that were not set to record
+        end
         local_full = [local_full, '_', params.boxes(i).mouse_id]; %#ok<*AGROW>
     end
 
@@ -37,7 +40,6 @@ function save_session(params, shared)
         
         % filter EEG/EMG before saving
         EEG = filtfilt(params.b_eeg,  params.a_eeg,  shared(i).eeg_data);
-%         EEG = my_hpfilter(EEG, 1, params.fs, 4);
         EMG = filtfilt(params.b_comb, params.a_comb, shared(i).emg_data);
         ttl = shared(i).ttl;
 
@@ -52,5 +54,5 @@ function save_session(params, shared)
     end
     
     %% yay we're done
-    clc, fprintf('-- Finished. -- \n')
+    fprintf('-- Finished. -- \n')
 end

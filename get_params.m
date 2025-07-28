@@ -80,8 +80,8 @@ function params = get_params()
     % Read user input
     params.session_name = char(name_field.Value);
     params.fs    = str2double(fs_field.Value);
-    params.dur   = str2double(time_field.Value)  * 60;
-    params.delay = str2double(delay_field.Value) * 60;
+    params.dur   = str2double(time_field.Value)  * 3600;
+    params.delay = str2double(delay_field.Value) * 3600;
 
     mouse_ids   = {uid1.Value, uid2.Value, uid3.Value, uid4.Value};
     box_vals    = [cb1.Value,  cb2.Value,  cb3.Value,  cb4.Value];
@@ -100,30 +100,32 @@ function params = get_params()
         params.boxes(i).mouse_id = mouse_ids{i};
         params.boxes(i).detect   = ismember(i, detect_boxes);
         params.boxes(i).record   = record_vals(i);
+
+        % just set to 1 as default, this should never trigger a ttl
         params.boxes(i).delta_thresh = 1;
         params.boxes(i).emg_thresh   = 1;
     end
 
     close(fig)
 
-    % Constants
-    params.daq_id = 'Dev1';
-    params.nyq = params.fs / 2;
-    params.aq_dur = 1;
-    params.epoch  = 5;
-    params.buffer = round(params.fs * params.aq_dur);
+    %%  Constants
+    params.daq_id  = 'Dev1';
+    params.nyq     = params.fs / 2;
+    params.aq_dur  = 1;
+    params.epoch   = 5;
+    params.buffer  = round(params.fs * params.aq_dur);
     params.ttl_dur = 0.1;
     params.delta_frq = [0.5, 4];
     params.theta_frq = [5, 10];
     params.eeg_low   = 0.5;
     params.eeg_high  = 50;
     params.ord       = 4;
-    params.ord_comb = 50;
+    params.ord_comb  = 50;
     params.fo = 60;
     params.q  = 35;
     params.bw = (params.fo / params.nyq) / params.q;
 
-    [params.b_eeg,  params.a_eeg]  = butter(params.ord, [params.eeg_low, params.eeg_high] / params.nyq, 'bandpass');
+    [params.b_eeg,  params.a_eeg]  = butter (params.ord, [params.eeg_low, params.eeg_high] / params.nyq, 'bandpass');
     [params.b_comb, params.a_comb] = iircomb(params.ord_comb, params.bw, 'notch');
 
     if params.delay > 0
