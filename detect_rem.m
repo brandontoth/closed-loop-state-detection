@@ -1,4 +1,4 @@
-function shared = detect_rem(shared, filt_eeg, filt_emg)
+function shared = detect_rem(shared)
     params = shared.params;
     fs     = params.fs;
 
@@ -7,24 +7,7 @@ function shared = detect_rem(shared, filt_eeg, filt_emg)
         shared.ttl = [shared.ttl; zeros(fs, 1)];
         return;
     end
-
-    % power estimation
-    [pxx, f] = pwelch(filt_eeg, hanning(params.buffer), params.buffer / 2, params.buffer, fs);
-    theta_idx = f >= params.theta_frq(1) & f <= params.theta_frq(2);
-    delta_idx = f >= params.delta_frq(1) & f <= params.delta_frq(2);
-
-    % calculate td ratio
-    theta = trapz(f(theta_idx), pxx(theta_idx));
-    delta = trapz(f(delta_idx), pxx(delta_idx));
-    td_ratio = theta / delta;
-
-    % calculate root mean square of EMG
-    emg_r = rms(filt_emg);
-
-    % save data
-    shared.emg_rms  = [shared.emg_rms;  emg_r];
-    shared.td_ratio = [shared.td_ratio; td_ratio];
-
+    
     % check if we're in REM sleep yet
     if ~shared.in_rem
         % hard threshold until we enter

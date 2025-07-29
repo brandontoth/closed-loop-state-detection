@@ -85,7 +85,6 @@ function params = get_params()
     dd_mode = uidropdown(fig, ...
         'Items', {'NREM', 'REM'}, ...
         'Position', [185, y-25, 100, 22]);
-    params.detection_mode = dd_mode.Value;
 
     % Store and return params
     setappdata(fig, 'params', params);
@@ -99,6 +98,7 @@ function params = get_params()
     params.delay = str2double(delay_field.Value) * 3600;
     params.detect_start = str2double(detect_start_field.Value) * 3600;
     params.detect_stop  = str2double(detect_stop_field.Value)  * 3600;
+    params.detection_mode = dd_mode.Value;
 
     mouse_ids   = {uid1.Value, uid2.Value, uid3.Value, uid4.Value};
     box_vals    = [cb1.Value,  cb2.Value,  cb3.Value,  cb4.Value];
@@ -119,9 +119,9 @@ function params = get_params()
         params.boxes(i).record   = record_vals(i);
         params.boxes(i).delta_thresh = 1;
         params.boxes(i).emg_thresh   = 1;
+        params.boxes(i).td_thresh    = 1;
+        params.boxes(i).td_soft      = 1;
     end
-
-    params.index = detect_boxes;
 
     close(fig)
 
@@ -148,5 +148,30 @@ function params = get_params()
     if params.delay > 0
         fprintf('\n -- Delaying recording for %d hours. -- \n', params.delay / 3600);
         pause(params.delay)
+    end
+end
+
+%% helper function to get the folder for calibration
+function select_folder(path_label)
+    folder = uigetdir;
+    if folder ~= 0
+        fig = path_label.Parent;
+        params = getappdata(fig, 'params');
+        params.calibration_folder = folder;
+        setappdata(fig, 'params', params);
+        truncated = truncate_path(folder, 50);
+        path_label.Text = truncated;
+        figure(fig); drawnow;
+    else
+        disp('Folder selection cancelled.');
+    end
+end
+
+%% helper function to truncate file paths
+function truncated = truncate_path(path_str, max_chars)
+    if strlength(path_str) > max_chars
+        truncated = "..." + extractAfter(path_str, strlength(path_str) - max_chars + 3);
+    else
+        truncated = path_str;
     end
 end

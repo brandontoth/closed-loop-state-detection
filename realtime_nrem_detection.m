@@ -18,6 +18,7 @@ for i = 1:numel(params.boxes)
     s_in.UserData(i).delta_thresh = params.boxes(i).delta_thresh;
     s_in.UserData(i).emg_thresh   = params.boxes(i).emg_thresh;
     s_in.UserData(i).params.boxes = params.boxes;
+    s_in.UserData(i).index        = i;
 end
 
 %% --- Main Loop Start ---
@@ -26,9 +27,8 @@ fprintf('-- Starting acquisition. -- \n')
 % start continuous background acquisition
 start(s_in, "continuous");
 disp("Running: " + s_in.Running);
-% pause(params.dur);
 
-% use small pause steps to see if that fixes the 10 s issue
+% use small pause steps to see if that fixes the 10 s issue (it didn't)
 t0 = tic;
 while toc(t0) < params.dur
     pause(0.5);

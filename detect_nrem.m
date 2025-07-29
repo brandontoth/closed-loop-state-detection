@@ -1,18 +1,6 @@
-function shared = detect_nrem(shared, filt_eeg, filt_emg, elapsed_time)
+function shared = detect_nrem(shared, elapsed_time)
     params = shared.params;
     fs     = params.fs;
-
-    % power estimation
-    [pxx, f]  = pwelch(filt_eeg, hanning(params.buffer), params.buffer / 2, params.buffer, fs);
-    delta_idx = f >= params.delta_frq(1) & f <= params.delta_frq(2);
-
-    % get delta power and EMG root mean square
-    delta = trapz(f(delta_idx), pxx(delta_idx));
-    emg_r = rms(filt_emg);
-
-    % save data
-    shared.delta   = [shared.delta; delta];
-    shared.emg_rms = [shared.emg_rms; emg_r];
 
     % Skip detection if not enabled
     if ~shared.params.boxes(shared.index).detect
@@ -21,7 +9,7 @@ function shared = detect_nrem(shared, filt_eeg, filt_emg, elapsed_time)
     end
 
     % Check if we are within detection window
-    if elapsed_time < params.detect_start_time || elapsed_time > params.detect_end_time
+    if elapsed_time < params.detect_start || elapsed_time > params.detect_stop
         shared.ttl = [shared.ttl; zeros(fs, 1)];
         shared.in_nrem = false;
         return;

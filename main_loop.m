@@ -30,6 +30,22 @@ function main_loop(src, ~)
             % filter eeg and emg
             filt_eeg = filtfilt(params.b_eeg,  params.a_eeg,  eeg);
             filt_emg = filtfilt(params.b_comb, params.a_comb, emg);
+
+            % Calculate power in delta and theta bands
+            [pxx, f]  = pwelch(filt_eeg, hanning(params.buffer), params.buffer / 2, params.buffer, params.fs);
+            theta_idx = f >= params.theta_frq(1) & f <= params.theta_frq(2);
+            delta_idx = f >= params.delta_frq(1) & f <= params.delta_frq(2);
+            
+            delta = sum(pxx(delta_idx));
+            theta = sum(pxx(theta_idx));
+            
+            % Store delta and td_ratio
+            shared.delta    = [shared.delta;    delta];
+            shared.td_ratio = [shared.td_ratio; theta / delta];
+
+            % calculate root mean square of emg
+            emg_r = rms(filt_emg);
+            shared.emg_rms = [shared.emg_rms; emg_r];
             
             % save the raw data
             shared.eeg_data = [shared.eeg_data; eeg];
@@ -37,9 +53,9 @@ function main_loop(src, ~)
 
             % Select detection mode
             if strcmpi(params.detection_mode, 'NREM')
-                shared = detect_nrem(shared, filt_eeg, filt_emg, elapsed_time);
+                shared = detect_nrem(shared, elapsed_time);
             elseif strcmpi(params.detection_mode, 'REM')
-                shared = detect_rem(shared, filt_eeg, filt_emg);
+                shared = detect_rem(shared);
             end
             
             % pass updated data back into shared object
