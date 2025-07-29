@@ -1,113 +1,54 @@
 function main_loop(src, ~)
     try
-        % pass src into shared variable
         shared_all = src.UserData;
 
-        % Track elapsed time (can just do this based on one box)
+        % start counting the elapsed time if we're detecting NREM
         elapsed_time = seconds(datetime('now') - shared_all(1).start_time);
-        
+
         % read in data from NIDAQ
         data = read(src, src.ScansAvailableFcnCount, "OutputFormat", "Matrix");
-
-        % update index in case we're not recording each box
+        
+        % add a column index to make sure we're in the correct box
         col_idx = 1;
 
-        % iterate across all boxes
+        % iterate through boxes
         for i = 1:4
+            % skip if we don't want to record this box
             if ~shared_all(i).params.boxes(i).record
                 continue;
             end
-
-            % pull the data for the current box
+            
+            % read in current box data
             shared = shared_all(i);
             params = shared.params;
-
-            % Extract EEG and EMG data for this box
+            
+            % read eeg/emg and update column index
             eeg  = data(:, col_idx);
             emg  = data(:, col_idx + 1);
             col_idx = col_idx + 2;
-
-            % Filter signals
+            
+            % filter eeg and emg
             filt_eeg = filtfilt(params.b_eeg,  params.a_eeg,  eeg);
             filt_emg = filtfilt(params.b_comb, params.a_comb, emg);
-
-            % pwelch power estimation
-            [pxx, f]  = pwelch(filt_eeg, hanning(params.buffer), ...
-                params.buffer / 2, params.buffer, params.fs);
-
-            % extract AUC for the delta band
-            delta_idx = f >= params.delta_frq(1) & f <= params.delta_frq(2);
-            delta = trapz(f(delta_idx), pxx(delta_idx));
-
-            % calculate root mean square of the EMG
-            emg_r = rms(filt_emg);
-
-            % Store raw data
+            
+            % save the raw data
             shared.eeg_data = [shared.eeg_data; eeg];
             shared.emg_data = [shared.emg_data; emg];
-            shared.delta    = [shared.delta;    delta];
-            shared.emg_rms  = [shared.emg_rms;  emg_r];
 
-            % Skip detection if not enabled
-            if ~params.boxes(i).detect
-                shared.ttl = [shared.ttl; zeros(params.fs, 1)];
-                shared_all(i) = shared;
-                continue;
-            end
-
-            % Check if we are within detection window
-            if elapsed_time < params.detect_start_time || elapsed_time > params.detect_end_time
-                shared.ttl = [shared.ttl; zeros(params.fs, 1)];
-                shared.in_nrem = false;
-                shared_all(i)  = shared;
-                continue;
+            % Select detection mode
+            if strcmpi(params.detection_mode, 'NREM')
+                shared = detect_nrem(shared, filt_eeg, filt_emg, elapsed_time);
+            elseif strcmpi(params.detection_mode, 'REM')
+                shared = detect_rem(shared, filt_eeg, filt_emg);
             end
             
-            % Update detection window using hard or soft threshold
-            if ~shared.in_nrem
-                % use hard threshold for entering NREM
-                is_nrem = (delta > shared.delta_thresh) && (emg_r < shared.emg_thresh);
-            else
-                % use soft threshold for staying in NREM
-                is_nrem = (delta > shared.delta_soft)   && (emg_r < shared.emg_soft);
-            end
-
-            % Update rolling detection window
-            shared.win = [shared.win(2:end), is_nrem];
-
-            % TTL logic
-            dur = round(params.fs * params.ttl_dur);
-            if sum(shared.win) >= 3
-                % in NREM, update flag
-                shared.in_nrem = true;
-
-                % check which output channel to send the ttl to
-                ttl_val = zeros(1, 2);
-                if i <= 2
-                    ttl_val(1) = 5;  % Pulse on ao0
-                else
-                    ttl_val(2) = 5;  % Pulse on ao1
-                end
-
-                % write ttl pulse to output session
-                write(shared.ttl_session, ttl_val);
-                pause(params.ttl_dur);
-                write(shared.ttl_session, [0, 0]);
-
-                % also write to an array for visualization later
-                shared.ttl = [shared.ttl; ones(dur, 1); zeros(params.fs - dur, 1)];
-            else
-                % not enough to qualify, reset flag
-                shared.in_nrem = false;
-                shared.ttl = [shared.ttl; zeros(params.fs, 1)];
-            end
-
-            % write all the data back to the shared file
+            % pass updated data back into shared object
             shared_all(i) = shared;
         end
-
-        % Update UserData with all shared structs
+        
+        % update user data for the NIDAQ session
         src.UserData = shared_all;
+        
     catch ME
         disp('Error in main_loop:')
         disp(ME.message)

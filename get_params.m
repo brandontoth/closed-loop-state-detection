@@ -75,10 +75,17 @@ function params = get_params()
     y = y - spacing*4;
     path_label = uilabel(fig, 'Text', 'No folder selected', ...
         'Position', [20 y+25 360 22], 'FontAngle', 'italic', 'HorizontalAlignment', 'left');
-    folder_btn = uibutton(fig, 'Text', 'Select Folder', 'Position', [100 y-50 120 30], ...
+    folder_btn = uibutton(fig, 'Text', 'Select Folder', 'Position', [100 y-80 120 30], ...
         'ButtonPushedFcn', @(btn,event) select_folder(path_label)); %#ok<*NASGU> 
-    str_btn = uibutton(fig, 'Text', 'Start', 'Position', [260 y-50 120 30], ...
+    str_btn = uibutton(fig, 'Text', 'Start', 'Position', [260 y-80 120 30], ...
         'ButtonPushedFcn', @(btn,event) uiresume(fig));
+
+    % Detection mode dropdown
+    lbl_mode = uilabel(fig, 'Position', [20, y-25, 150, 22], 'Text', 'Detection Mode');
+    dd_mode = uidropdown(fig, ...
+        'Items', {'NREM', 'REM'}, ...
+        'Position', [185, y-25, 100, 22]);
+    params.detection_mode = dd_mode.Value;
 
     % Store and return params
     setappdata(fig, 'params', params);
@@ -114,6 +121,8 @@ function params = get_params()
         params.boxes(i).emg_thresh   = 1;
     end
 
+    params.index = detect_boxes;
+
     close(fig)
 
     %%  Constants
@@ -124,7 +133,7 @@ function params = get_params()
     params.buffer  = round(params.fs * params.aq_dur);
     params.ttl_dur = 0.1;
     params.delta_frq = [0.5, 4];
-    params.theta_frq = [5, 10];
+    params.theta_frq = [5, 12];
     params.eeg_low   = 0.5;
     params.eeg_high  = 50;
     params.ord       = 4;
