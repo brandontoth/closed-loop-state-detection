@@ -2,51 +2,51 @@ function shared = detect_nrem(shared, elapsed_time)
     params = shared.params;
     fs     = params.fs;
 
-    % Skip detection if not enabled
-    if ~shared.params.boxes(shared.index).detect
+    % Skip detection if not enabled for this box
+    if ~params.boxes(shared.box_id).detect
         shared.ttl = [shared.ttl; zeros(fs, 1)];
         return;
     end
 
-    % Check if we are within detection window
+    % Skip detection outside of time window
     if elapsed_time < params.detect_start || elapsed_time > params.detect_stop
         shared.ttl = [shared.ttl; zeros(fs, 1)];
         shared.in_nrem = false;
         return;
     end
 
-    % check if we're in NREM sleep yet
+    % Get most recent values
+    delta  = shared.delta  (end);
+    emg_r  = shared.emg_rms(end);
+
+    % Apply hard vs. soft thresholds depending on current NREM state
     if ~shared.in_nrem
-        % hard threshold until we enter
         is_nrem = (delta > shared.delta_thresh) && (emg_r < shared.emg_thresh);
     else
-        % soft threshold once we're there
-        is_nrem = (delta > shared.delta_soft)   && (emg_r < shared.emg_soft);
+        is_nrem = (delta > shared.delta_soft) && (emg_r < shared.emg_soft);
     end
 
-    % update window
+    % Update sliding detection window
     shared.win = [shared.win(2:end), is_nrem];
 
-    % ttl logic
+    % Check if we've met NREM criteria
     dur = round(fs * params.ttl_dur);
     if sum(shared.win) >= 3
-        % in NREM, update flag
+        % In NREM
         shared.in_nrem = true;
 
-        % ttls initially 0
+        % TTL signal: high on assigned output channel
         ttl_val = zeros(1, 2);
+        ttl_val(ceil(shared.box_id / 2)) = 5;
 
-        % check which box we're recording to send to appropriate output
-        % channel
-        ttl_val(ceil(shared.index / 2)) = 5;
         write(shared.ttl_session, ttl_val);
-        pause(params.ttl_dur);
+        pause(params.ttl_dur);  % hold TTL pulse
         write(shared.ttl_session, [0, 0]);
 
-        % update variable for visualization later
+        % Record TTL output for visualization
         shared.ttl = [shared.ttl; ones(dur, 1); zeros(fs - dur, 1)];
     else
-        % not enough to qualify, reset flag
+        % Not in NREM
         shared.in_nrem = false;
         shared.ttl = [shared.ttl; zeros(fs, 1)];
     end

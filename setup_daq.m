@@ -16,14 +16,14 @@ function [s_in, s_out] = setup_daq(params)
         shared(i).delta_thresh = params.boxes(i).delta_thresh;
         shared(i).td_thresh    = params.boxes(i).td_thresh;
         shared(i).emg_thresh   = params.boxes(i).emg_thresh;
-        shared(i).delta_soft   = params.boxes(i).delta_thresh * 0.8;
+        shared(i).delta_soft   = params.boxes(i).delta_thresh * 0.7;
         shared(i).td_soft      = params.boxes(i).td_soft;
         shared(i).emg_soft     = params.boxes(i).emg_thresh * 1.2;
 
         shared(i).in_nrem      = false;
         shared(i).in_rem       = false;
 
-        shared(i).win          = false(1, 5);
+        shared(i).win          = false(1, 6);
 
         shared(i).nrem_log     = [];
         shared(i).eeg_data     = [];

@@ -7,7 +7,11 @@ function shared = detect_rem(shared)
         shared.ttl = [shared.ttl; zeros(fs, 1)];
         return;
     end
-    
+
+    % get most recent values
+    td_ratio = shared.td_ratio(end);
+    emg_r    = shared.emg_rms (end);
+
     % check if we're in REM sleep yet
     if ~shared.in_rem
         % hard threshold until we enter
