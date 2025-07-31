@@ -40,6 +40,7 @@ function params = calibrate_session(params)
             % Calculate calibration threshold based on low EMG periods
             emg_thresh = mean(emg_rms(low_emg_idx)) + std(emg_rms(low_emg_idx)) * 2;
             params.boxes(i).emg_thresh = emg_thresh;
+            params.boxes(i).emg_soft   = emg_thresh * 1.2;
         else
             warning('No EMG data found for Box %d. Skipping EMG threshold.', i);
             continue;
@@ -53,6 +54,7 @@ function params = calibrate_session(params)
             % Use low EMG periods to estimate delta threshold
             delta_thresh = mean(delta(low_emg_idx));
             params.boxes(i).delta_thresh = delta_thresh;
+            params.boxes(i).delta_soft   = delta_thresh * 0.5;
 
             fprintf('-- Box %d NREM thresholds: EMG = %.3f, Delta = %.3f --\n', ...
                 i, emg_thresh, delta_thresh);

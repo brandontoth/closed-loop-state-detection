@@ -23,7 +23,7 @@ function shared = detect_nrem(shared, elapsed_time)
     if ~shared.in_nrem
         is_nrem = (delta > shared.delta_thresh) && (emg_r < shared.emg_thresh);
     else
-        is_nrem = (delta > shared.delta_soft) && (emg_r < shared.emg_soft);
+        is_nrem = (delta > shared.delta_soft)   && (emg_r < shared.emg_soft);
     end
 
     % Update sliding detection window

@@ -12,31 +12,35 @@ function [s_in, s_out] = setup_daq(params)
 
     % Loop over each box and configure if recording enabled
     for i = 1:4
-        % Initialize all fields of the shared struct for this box
+        % thresholds
         shared(i).delta_thresh = params.boxes(i).delta_thresh;
         shared(i).td_thresh    = params.boxes(i).td_thresh;
         shared(i).emg_thresh   = params.boxes(i).emg_thresh;
-        shared(i).delta_soft   = params.boxes(i).delta_thresh * 0.7;
+        shared(i).delta_soft   = params.boxes(i).delta_thresh;
         shared(i).td_soft      = params.boxes(i).td_soft;
-        shared(i).emg_soft     = params.boxes(i).emg_thresh * 1.2;
-
+        shared(i).emg_soft     = params.boxes(i).emg_thresh;
+        
+        % bools for state detection
         shared(i).in_nrem      = false;
         shared(i).in_rem       = false;
-
-        shared(i).win          = false(1, 6);
-
-        shared(i).nrem_log     = [];
+        
+        % moving window
+        shared(i).win          = false(1, 8);
+        
+        % initialize actual session related data variables
         shared(i).eeg_data     = [];
         shared(i).emg_data     = [];
         shared(i).delta        = [];
         shared(i).td_ratio     = [];
         shared(i).emg_rms      = [];
         shared(i).ttl          = [];
-
+        
+        % housekeeping
         shared(i).params       = params;
         shared(i).box_id       = i;
         shared(i).start_time   = datetime('now');
-
+        
+        % prepare for ttl session
         shared(i).ttl_session  = [];  % will assign after s_out creation
 
         % Only add input channels if this box is set to record
@@ -63,6 +67,7 @@ function [s_in, s_out] = setup_daq(params)
     % Assign the TTL output session handle to all shared structs
     % This allows detect_nrem and detect_rem to send TTL pulses
     for i = 1:4
+        % if we're not recording, no need to set up a session
         if params.boxes(i).record
             shared(i).ttl_session = s_out;
         end

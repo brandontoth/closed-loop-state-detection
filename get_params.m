@@ -117,9 +117,13 @@ function params = get_params()
         params.boxes(i).mouse_id = mouse_ids{i};
         params.boxes(i).detect   = ismember(i, detect_boxes);
         params.boxes(i).record   = record_vals(i);
+        
+        % will calibrate later if needed
         params.boxes(i).delta_thresh = 1;
         params.boxes(i).emg_thresh   = 1;
         params.boxes(i).td_thresh    = 1;
+        params.boxes(i).delta_soft   = 1;
+        params.boxes(i).emg_soft     = 1;
         params.boxes(i).td_soft      = 1;
     end
 
